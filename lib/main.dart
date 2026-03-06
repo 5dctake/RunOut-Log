@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:runout_log/models/practice_record.dart';
 import 'package:runout_log/screens/splash_screen.dart';
 import 'package:runout_log/services/ad_service.dart';
+import 'package:runout_log/services/purchase_service.dart';
 import 'package:runout_log/utils/constants.dart';
 
 void main() async {
@@ -19,11 +20,23 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // 課金ストリームの初期化
+    PurchaseService().initialize(ref);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // ポップな印象の丸文字フォントをベースにテキストテーマを作成
     final textTheme = GoogleFonts.mPlusRounded1cTextTheme(
       ThemeData.light().textTheme,

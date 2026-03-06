@@ -30,19 +30,59 @@ class PurchaseService {
   factory PurchaseService() => _instance;
   PurchaseService._internal();
 
-  // ignore: unused_field
   final InAppPurchase _iap = InAppPurchase.instance;
   static const String adFreeProductId = 'remove_ads_permanent';
 
+  /// 決済ストリームの監視を開始する（main.dart または初期画面で呼ぶ）
+  void initialize(WidgetRef ref) {
+    final purchaseUpdated = _iap.purchaseStream;
+    purchaseUpdated.listen((purchaseDetailsList) {
+      _handlePurchaseUpdates(purchaseDetailsList, ref);
+    }, onDone: () {
+      // ストリーム終了
+    }, onError: (error) {
+      // エラー処理
+    });
+  }
+
+  void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList, WidgetRef ref) async {
+    for (var purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.pending) {
+        // 処理待機中
+      } else {
+        if (purchaseDetails.status == PurchaseStatus.error) {
+          // エラー
+        } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+                   purchaseDetails.status == PurchaseStatus.restored) {
+          // 購入完了 または リストア完了
+          await ref.read(adFreeProvider.notifier).setAdFree(true);
+        }
+
+        if (purchaseDetails.pendingCompletePurchase) {
+          await _iap.completePurchase(purchaseDetails);
+        }
+      }
+    }
+  }
+
   Future<void> buyAdFree(WidgetRef ref) async {
-    // 実際の課金ロジックのスケルトン
-    // MVP/開発用として、シミュレーションで即時有効化
-    // 本番では _iap.buyNonConsumable(...) を使用
-    await ref.read(adFreeProvider.notifier).setAdFree(true);
+    final bool available = await _iap.isAvailable();
+    if (!available) return;
+
+    final ProductDetailsResponse response = await _iap.queryProductDetails({adFreeProductId});
+    if (response.notFoundIDs.isNotEmpty) {
+      // プロダクトが見つからない
+      return;
+    }
+
+    final ProductDetails productDetails = response.productDetails.first;
+    final PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails);
+    
+    // 決済開始
+    await _iap.buyNonConsumable(purchaseParam: purchaseParam);
   }
 
   Future<void> restorePurchase(WidgetRef ref) async {
-    // リストアロジックのスケルトン
-    await ref.read(adFreeProvider.notifier).setAdFree(true);
+    await _iap.restorePurchases();
   }
 }
