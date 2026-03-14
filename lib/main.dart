@@ -8,15 +8,11 @@ import 'package:runout_log/services/ad_service.dart';
 import 'package:runout_log/services/purchase_service.dart';
 import 'package:runout_log/utils/constants.dart';
 
-void main() async {
+void main() {
+  // Ensure Flutter is initialized but don't await anything else
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(PracticeRecordAdapter());
-  await Hive.openBox<PracticeRecord>('practice_records');
   
-  // 広告サービスの初期化
-  await AdService().init();
-
+  // Start the app immediately to show the splash screen
   runApp(const ProviderScope(child: MyApp()));
 }
 

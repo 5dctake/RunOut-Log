@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdService {
@@ -34,8 +35,28 @@ class AdService {
   }
 
   Future<void> init() async {
-    await MobileAds.instance.initialize();
-    loadInterstitialAd();
+    try {
+      // iOSの場合はATTの許可リクエストを行う
+      if (Platform.isIOS) {
+        final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+        if (status == TrackingStatus.notDetermined) {
+          await AppTrackingTransparency.requestTrackingAuthorization();
+        }
+      }
+
+      // 初期化処理全体にタイムアウトを設定（最大10秒）
+      await MobileAds.instance.initialize().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('AdService: MobileAds initialization timed out');
+          return InitializationStatus({});
+        },
+      );
+      
+      loadInterstitialAd();
+    } catch (e) {
+      debugPrint('AdService: Error during init: $e');
+    }
   }
 
   void loadInterstitialAd() {
@@ -62,26 +83,51 @@ class AdService {
 
   void showInterstitialAd({required VoidCallback onDismiss}) {
     if (_interstitialAd == null) {
-      debugPrint('Warning: InterstitialAd not ready');
+      debugPrint('AdService: InterstitialAd not ready');
       onDismiss();
-      loadInterstitialAd(); // 次回のためにロード
+      loadInterstitialAd(); // Load for next time
       return;
     }
 
-    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdDismissedFullScreenContent: (ad) {
-        ad.dispose();
-        loadInterstitialAd(); // 次回のためにロード
+    // Safety timeout: If the ad doesn't dismiss within 30 seconds for any reason,
+    // force call onDismiss to prevent blocking the user.
+    bool dismissed = false;
+    final timeout = Future.delayed(const Duration(seconds: 30), () {
+      if (!dismissed) {
+        debugPrint('AdService: Ad display timed out, forcing dismissal');
+        dismissed = true;
         onDismiss();
+      }
+    });
+
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (ad) {
+        debugPrint('AdService: Ad showed full screen content.');
+      },
+      onAdDismissedFullScreenContent: (ad) {
+        debugPrint('AdService: Ad dismissed full screen content.');
+        ad.dispose();
+        _interstitialAd = null;
+        if (!dismissed) {
+          dismissed = true;
+          onDismiss();
+          loadInterstitialAd(); // Load for next time
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
+        debugPrint('AdService: Ad failed to show full screen content: $error');
         ad.dispose();
-        loadInterstitialAd();
-        onDismiss();
+        _interstitialAd = null;
+        if (!dismissed) {
+          dismissed = true;
+          onDismiss();
+          loadInterstitialAd();
+        }
       },
+      onAdImpression: (ad) => debugPrint('AdService: Ad impression recorded.'),
     );
 
+    debugPrint('AdService: Attempting to show InterstitialAd');
     _interstitialAd!.show();
-    _interstitialAd = null;
   }
 }

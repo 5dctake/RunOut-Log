@@ -133,6 +133,10 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
 
     final isAdFree = ref.read(adFreeProvider);
     if (!isAdFree) {
+      // Add a small delay to ensure dialog dismissal and route stability
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      
       AdService().showInterstitialAd(onDismiss: () {
         _onSaveComplete();
       });

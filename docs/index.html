@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunOut Log - ビリヤード練習記録アプリ</title>
+    <meta name="description" content="RunOut Logは、ビリヤードの練習記録を効率的に管理し、統計分析をサポートするアプリです。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0e14;
+            --text-color: #e0e6ed;
+            --accent-color: #00d4ff;
+            --secondary-color: #1a2332;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            background: radial-gradient(circle at center, #16213e 0%, #0a0e14 70%);
+            position: relative;
+        }
+
+        .hero-content {
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #a0aec0;
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-item {
+            background: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .feature-item h3 {
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #718096;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background-color: #33e1ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .links {
+            margin-top: 2rem;
+        }
+
+        .links a {
+            color: #a0aec0;
+            text-decoration: none;
+            margin: 0 1rem;
+            transition: color 0.2s;
+        }
+
+        .links a:hover {
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .tagline { font-size: 1.2rem; }
+            .glass-card { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="hero-content">
+            <h1>RunOut Log</h1>
+            <p class="tagline">ビリヤードの練習記録を、もっとスマートに。</p>
+            <div class="cta">
+                <a href="#features" class="btn btn-primary">機能を見る</a>
+                <a href="https://github.com/5dctake/RunOut-Log" class="btn btn-secondary">GitHub</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section id="features" class="glass-card">
+            <h2>Features</h2>
+            <div class="features">
+                <div class="feature-item">
+                    <h3>練習記録</h3>
+                    <p>日々の練習内容や、セットマッチの結果を簡単に記録。直感的なインターフェースで入力をサポートします。</p>
+                </div>
+                <div class="feature-item">
+                    <h3>統計・分析</h3>
+                    <p>蓄積されたデータから、自分の成長を視覚化。弱点の把握やモチベーションの維持に役立ちます。</p>
+                </div>
+                <div class="feature-item">
+                    <h3>HUD UI</h3>
+                    <p>プレイ中に邪魔にならない、洗練されたデザイン。スマホを操作する時間ではなく、キューを振る時間を大切に。</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-card">
+            <h2>Support & Privacy</h2>
+            <p>このアプリはオープンソースプロジェクトとして開発されています。バグ報告や機能要望は GitHub Issues にて受け付けています。</p>
+            <div class="links">
+                <a href="https://github.com/5dctake/RunOut-Log/blob/main/PRIVACY_POLICY.md">Privacy Policy</a>
+                <a href="https://github.com/5dctake/RunOut-Log/issues">Support (GitHub)</a>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 RunOut Log / 5dctake. Developed for Billiards Players.</p>
+    </footer>
+</body>
+</html>

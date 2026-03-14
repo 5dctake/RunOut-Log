@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:runout_log/models/practice_record.dart';
 import 'package:runout_log/screens/home_screen.dart';
 import 'package:runout_log/screens/onboarding_screen.dart';
 import 'package:runout_log/utils/constants.dart';
+import 'package:runout_log/services/ad_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,6 +19,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  bool _isInitialized = false;
 
   @override
   void initState() {
@@ -34,11 +38,53 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
 
     _controller.forward();
-    _navigateToNext();
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    try {
+      debugPrint('SplashScreen: Starting initialization...');
+      
+      // 1. Hiveの初期化
+      await Hive.initFlutter();
+      if (!Hive.isAdapterRegistered(0)) { // PracticeRecordAdapterのIDを確認
+        Hive.registerAdapter(PracticeRecordAdapter());
+      }
+      await Hive.openBox<PracticeRecord>('practice_records');
+      debugPrint('SplashScreen: Hive initialized');
+
+      // 2. 広告サービスの初期化（並行して行い、タイムアウト付き）
+      // addPostFrameCallbackで呼び出すことで、最初のフレーム描画を優先する
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        AdService().init().catchError((e) {
+          debugPrint('SplashScreen: AdService init error: $e');
+        });
+      });
+
+      setState(() {
+        _isInitialized = true;
+      });
+      
+      _navigateToNext();
+    } catch (e) {
+      debugPrint('SplashScreen: Initialization failed: $e');
+      // 致命的なエラーでもアプリを止めないよう、強引に進む
+      setState(() {
+        _isInitialized = true;
+      });
+      _navigateToNext();
+    }
   }
 
   Future<void> _navigateToNext() async {
+    // 最低限の表示時間を確保
     await Future.delayed(const Duration(milliseconds: 2500));
+    
+    // 初期化が終わるまで待機
+    while (!_isInitialized) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
