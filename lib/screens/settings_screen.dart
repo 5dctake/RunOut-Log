@@ -95,7 +95,7 @@ class SettingsScreen extends ConsumerWidget {
                         AppButton(
                           label: L10n.s(ref, 'remove_ads'),
                           onPressed: () async {
-                            await PurchaseService().buyAdFree(ref);
+                            await ref.read(purchaseServiceProvider).buyAdFree();
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Purchase successful!')),
@@ -105,7 +105,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         TextButton(
-                          onPressed: () => PurchaseService().restorePurchase(ref),
+                          onPressed: () => ref.read(purchaseServiceProvider).restorePurchase(),
                           child: Text(L10n.s(ref, 'restore_purchase')),
                         ),
                       ],
@@ -118,7 +118,7 @@ class SettingsScreen extends ConsumerWidget {
               title: 'アプリ情報',
               child: Column(
                 children: [
-                  _buildInfoRow(Icons.info_outline, 'VERSION', '2.0.0 (Ad-Enabled)'),
+                  _buildInfoRow(Icons.info_outline, 'VERSION', '1.1.0 (Ad-Supported)'),
                   const Divider(height: 32),
                   _buildInfoRow(Icons.verified_user_outlined, 'STATUS', 'BETA / TEST ADS'),
                 ],

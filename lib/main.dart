@@ -8,11 +8,20 @@ import 'package:runout_log/services/ad_service.dart';
 import 'package:runout_log/services/purchase_service.dart';
 import 'package:runout_log/utils/constants.dart';
 
-void main() {
-  // Ensure Flutter is initialized but don't await anything else
+void main() async {
+  // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Start the app immediately to show the splash screen
+  // Hive の初期化
+  await Hive.initFlutter();
+  if (!Hive.isAdapterRegistered(0)) {
+    Hive.registerAdapter(PracticeRecordAdapter());
+  }
+  await Hive.openBox<PracticeRecord>('practice_records');
+  
+  // AdMob と ATT の初期化
+  await AdService().init();
+  
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -27,8 +36,8 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    // 課金ストリームの初期化
-    PurchaseService().initialize(ref);
+    // 課金ストリームの初期化 (Provider 経由で Ref を受け取り初期化)
+    ref.read(purchaseServiceProvider);
   }
 
   @override

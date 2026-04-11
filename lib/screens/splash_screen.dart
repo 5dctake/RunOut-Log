@@ -43,15 +43,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   Future<void> _initApp() async {
     try {
-      debugPrint('SplashScreen: Starting initialization...');
+      debugPrint('SplashScreen: Checking initialization...');
       
-      // 1. Hiveの初期化
-      await Hive.initFlutter();
-      if (!Hive.isAdapterRegistered(0)) { // PracticeRecordAdapterのIDを確認
+      // Hiveの状態確認 (mainで初期化済みのはずだが安全策)
+      if (!Hive.isAdapterRegistered(0)) {
         Hive.registerAdapter(PracticeRecordAdapter());
       }
-      await Hive.openBox<PracticeRecord>('practice_records');
-      debugPrint('SplashScreen: Hive initialized');
+      if (!Hive.isBoxOpen('practice_records')) {
+        await Hive.openBox<PracticeRecord>('practice_records');
+      }
+      debugPrint('SplashScreen: Hive ready');
 
       // 2. 広告サービスの初期化（並行して行い、タイムアウト付き）
       // addPostFrameCallbackで呼び出すことで、最初のフレーム描画を優先する

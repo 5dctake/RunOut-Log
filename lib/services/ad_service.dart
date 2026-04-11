@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
@@ -92,7 +93,9 @@ class AdService {
     // Safety timeout: If the ad doesn't dismiss within 30 seconds for any reason,
     // force call onDismiss to prevent blocking the user.
     bool dismissed = false;
-    final timeout = Future.delayed(const Duration(seconds: 30), () {
+    Timer? timeoutTimer; // Timer に変更
+    
+    timeoutTimer = Timer(const Duration(seconds: 30), () {
       if (!dismissed) {
         debugPrint('AdService: Ad display timed out, forcing dismissal');
         dismissed = true;
@@ -106,6 +109,7 @@ class AdService {
       },
       onAdDismissedFullScreenContent: (ad) {
         debugPrint('AdService: Ad dismissed full screen content.');
+        timeoutTimer?.cancel(); // タイマーをキャンセル
         ad.dispose();
         _interstitialAd = null;
         if (!dismissed) {
@@ -116,6 +120,7 @@ class AdService {
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         debugPrint('AdService: Ad failed to show full screen content: $error');
+        timeoutTimer?.cancel(); // タイマーをキャンセル
         ad.dispose();
         _interstitialAd = null;
         if (!dismissed) {

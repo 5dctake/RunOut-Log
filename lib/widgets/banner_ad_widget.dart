@@ -18,7 +18,13 @@ class _BannerAdWidgetState extends ConsumerState<BannerAdWidget> {
   @override
   void initState() {
     super.initState();
-    _loadAd();
+    // 広告を表示すべきかどうかを判定してからロード
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final isAdFree = ref.read(adFreeProvider);
+        if (!isAdFree) _loadAd();
+      }
+    });
   }
 
   void _loadAd() {

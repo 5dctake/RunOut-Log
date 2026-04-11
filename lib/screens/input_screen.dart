@@ -29,7 +29,7 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: 2);
+    _tabController = TabController(length: 4, vsync: this, initialIndex: 3);
     _tabController.addListener(_handleTabSelection);
     _checkTutorial();
   }
@@ -60,7 +60,7 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
 
   void _handleTabSelection() {
     if (_tabController.indexIsChanging) return;
-    final counts = [3, 4, 5];
+    final counts = [2, 3, 4, 5];
     ref.read(ballCountProvider.notifier).state = counts[_tabController.index];
   }
 
@@ -160,7 +160,7 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     // Providerの値が変更されたらTabControllerを同期（ビルド中ではなくリスナーで実行）
     ref.listen<int>(ballCountProvider, (previous, next) {
-      final targetIndex = next == 3 ? 0 : (next == 4 ? 1 : 2);
+      final targetIndex = next == 2 ? 0 : (next == 3 ? 1 : (next == 4 ? 2 : 3));
       if (_tabController.index != targetIndex) {
         _tabController.animateTo(targetIndex);
       }
@@ -181,6 +181,7 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
               unselectedLabelColor: AppColors.textDim,
               indicatorSize: TabBarIndicatorSize.label,
               tabs: [
+                Tab(text: '2 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
                 Tab(text: '3 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
                 Tab(text: '4 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
                 Tab(text: '5 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),

@@ -25,15 +25,15 @@ class _RecordScreenState extends ConsumerState<RecordScreen> with SingleTickerPr
     super.initState();
     // 現在のProviderの値に基づいて初期インデックスを計算
     final initialBallCount = ref.read(ballCountProvider);
-    final initialIndex = initialBallCount == 3 ? 0 : (initialBallCount == 4 ? 1 : 2);
+    final initialIndex = initialBallCount == 2 ? 0 : (initialBallCount == 3 ? 1 : (initialBallCount == 4 ? 2 : 3));
     
-    _tabController = TabController(length: 3, vsync: this, initialIndex: initialIndex);
+    _tabController = TabController(length: 4, vsync: this, initialIndex: initialIndex);
     _tabController.addListener(_handleTabSelection);
   }
 
   void _handleTabSelection() {
     if (_tabController.indexIsChanging) return;
-    final counts = [3, 4, 5];
+    final counts = [2, 3, 4, 5];
     final selectedCount = counts[_tabController.index];
     if (ref.read(ballCountProvider) != selectedCount) {
       ref.read(ballCountProvider.notifier).state = selectedCount;
@@ -51,7 +51,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> with SingleTickerPr
   Widget build(BuildContext context) {
     // Providerの値が変更されたらTabControllerを同期（リスナーを使用）
     ref.listen<int>(ballCountProvider, (previous, next) {
-      final targetIndex = next == 3 ? 0 : (next == 4 ? 1 : 2);
+      final targetIndex = next == 2 ? 0 : (next == 3 ? 1 : (next == 4 ? 2 : 3));
       if (_tabController.index != targetIndex) {
         _tabController.animateTo(targetIndex);
       }
@@ -76,6 +76,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> with SingleTickerPr
           unselectedLabelColor: AppColors.textDim,
           indicatorSize: TabBarIndicatorSize.label,
           tabs: [
+            Tab(text: '2 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '3 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '4 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '5 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),

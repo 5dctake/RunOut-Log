@@ -24,11 +24,11 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
     super.initState();
     // 種目タブ (3, 4, 5)
     final initialBallCount = ref.read(ballCountProvider);
-    final initialIndex = initialBallCount == 3 ? 0 : (initialBallCount == 4 ? 1 : 2);
-    _ballTabController = TabController(length: 3, vsync: this, initialIndex: initialIndex);
+    final initialIndex = initialBallCount == 2 ? 0 : (initialBallCount == 3 ? 1 : (initialBallCount == 4 ? 2 : 3));
+    _ballTabController = TabController(length: 4, vsync: this, initialIndex: initialIndex);
     _ballTabController.addListener(() {
       if (!_ballTabController.indexIsChanging) {
-        final counts = [3, 4, 5];
+        final counts = [2, 3, 4, 5];
         ref.read(ballCountProvider.notifier).state = counts[_ballTabController.index];
       }
     });
@@ -48,7 +48,7 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
   Widget build(BuildContext context) {
     // Providerの値が変更されたらTabControllerを同期（リスナーを使用）
     ref.listen<int>(ballCountProvider, (previous, next) {
-      final targetIndex = next == 3 ? 0 : (next == 4 ? 1 : 2);
+      final targetIndex = next == 2 ? 0 : (next == 3 ? 1 : (next == 4 ? 2 : 3));
       if (_ballTabController.index != targetIndex) {
         _ballTabController.animateTo(targetIndex);
       }
@@ -69,6 +69,7 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textDim,
           tabs: [
+            Tab(text: '2 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '3 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '4 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '5 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
