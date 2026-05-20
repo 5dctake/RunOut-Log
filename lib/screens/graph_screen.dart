@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import 'package:runout_log/models/practice_record.dart';
 import 'package:runout_log/providers/records_provider.dart';
 import 'package:runout_log/utils/constants.dart';
@@ -112,7 +113,8 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
   }
 
   Widget _buildSectorChart(List<PracticeRecord> records) {
-    final blocks = StatsCalculator.splitIntoBlocks(records);
+    // 古いブロックが左、新しいブロックが右になるように並べ替える (時系列順)
+    final blocks = StatsCalculator.splitIntoBlocks(records).reversed.toList();
     if (blocks.isEmpty) return _buildNoData();
 
     final points = blocks.asMap().entries.map((e) {
@@ -120,9 +122,19 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
       return FlSpot(e.key.toDouble(), successRate);
     }).toList();
 
+    // 試行範囲ラベルの生成 (例: "1-100", "101-200")
+    int currentStartNum = 1;
+    final labels = blocks.map((block) {
+      final blockTrials = block.fold(0, (sum, r) => sum + r.results.length);
+      final endNum = currentStartNum + blockTrials - 1;
+      final label = '$currentStartNum-$endNum';
+      currentStartNum += blockTrials;
+      return label;
+    }).toList();
+
     return _buildChartFrame(
       title: L10n.s(ref, 'sector_trend'),
-      child: spotsToWidget(points),
+      child: spotsToWidget(points, labels: labels),
     );
   }
 
@@ -133,9 +145,12 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
       return FlSpot(e.key.toDouble(), e.value.successRate);
     }).toList();
 
+    // 日付ラベルの生成 (例: "05/20")
+    final labels = records.map((r) => DateFormat('MM/dd').format(r.date)).toList();
+
     return _buildChartFrame(
       title: L10n.s(ref, 'seq_trend'),
-      child: spotsToWidget(points),
+      child: spotsToWidget(points, labels: labels),
     );
   }
 
@@ -148,7 +163,8 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
       return FlSpot(e.key.toDouble(), successRate);
     }).toList();
 
-    final labels = monthlyGroups.keys.toList();
+    // ラベルをあらかじめ YY-MM 形式に整形して渡す (例: "2026-05" -> "26-05")
+    final labels = monthlyGroups.keys.map((k) => k.length > 5 ? k.substring(2) : k).toList();
 
     return _buildChartFrame(
       title: L10n.s(ref, 'monthly'),
@@ -234,7 +250,7 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      labels[index].substring(labels[index].length > 5 ? 2 : 0), // YY-MM または YYYY
+                      labels[index], // 整形済みのラベルをそのまま表示
                       style: const TextStyle(color: AppColors.textDim, fontSize: 9, fontWeight: FontWeight.bold),
                     ),
                   );
