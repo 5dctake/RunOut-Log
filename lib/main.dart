@@ -4,8 +4,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:runout_log/models/practice_record.dart';
 import 'package:runout_log/screens/splash_screen.dart';
-import 'package:runout_log/services/ad_service.dart';
-import 'package:runout_log/services/purchase_service.dart';
 import 'package:runout_log/utils/constants.dart';
 
 void main() async {
@@ -19,8 +17,6 @@ void main() async {
   }
   await Hive.openBox<PracticeRecord>('practice_records');
   
-  // AdMob と ATT の初期化
-  await AdService().init();
   
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -33,13 +29,6 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
-  @override
-  void initState() {
-    super.initState();
-    // 課金ストリームの初期化 (Provider 経由で Ref を受け取り初期化)
-    ref.read(purchaseServiceProvider);
-  }
-
   @override
   Widget build(BuildContext context) {
     // ポップな印象の丸文字フォントをベースにテキストテーマを作成

@@ -23,13 +23,19 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    // 種目タブ (3, 4, 5)
+    // 種目タブ (CS=1, 2, 3, 4, 5)
     final initialBallCount = ref.read(ballCountProvider);
-    final initialIndex = initialBallCount == 2 ? 0 : (initialBallCount == 3 ? 1 : (initialBallCount == 4 ? 2 : 3));
-    _ballTabController = TabController(length: 4, vsync: this, initialIndex: initialIndex);
+    final initialIndex = initialBallCount == 1
+        ? 0
+        : (initialBallCount == 2
+            ? 1
+            : (initialBallCount == 3
+                ? 2
+                : (initialBallCount == 4 ? 3 : 4)));
+    _ballTabController = TabController(length: 5, vsync: this, initialIndex: initialIndex);
     _ballTabController.addListener(() {
       if (!_ballTabController.indexIsChanging) {
-        final counts = [2, 3, 4, 5];
+        final counts = [1, 2, 3, 4, 5]; // 1 = Center Shot (CS)
         ref.read(ballCountProvider.notifier).state = counts[_ballTabController.index];
       }
     });
@@ -49,7 +55,13 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
   Widget build(BuildContext context) {
     // Providerの値が変更されたらTabControllerを同期（リスナーを使用）
     ref.listen<int>(ballCountProvider, (previous, next) {
-      final targetIndex = next == 2 ? 0 : (next == 3 ? 1 : (next == 4 ? 2 : 3));
+      final targetIndex = next == 1
+          ? 0
+          : (next == 2
+              ? 1
+              : (next == 3
+                  ? 2
+                  : (next == 4 ? 3 : 4)));
       if (_ballTabController.index != targetIndex) {
         _ballTabController.animateTo(targetIndex);
       }
@@ -70,6 +82,7 @@ class _GraphScreenState extends ConsumerState<GraphScreen> with TickerProviderSt
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textDim,
           tabs: [
+            const Tab(text: 'CS'),
             Tab(text: '2 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '3 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '4 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),

@@ -23,17 +23,23 @@ class _RecordScreenState extends ConsumerState<RecordScreen> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    // 現在のProviderの値に基づいて初期インデックスを計算
+    // 現在のProviderの値に基づいて初期インデックスを計算 (1=CS, 2, 3, 4, 5)
     final initialBallCount = ref.read(ballCountProvider);
-    final initialIndex = initialBallCount == 2 ? 0 : (initialBallCount == 3 ? 1 : (initialBallCount == 4 ? 2 : 3));
+    final initialIndex = initialBallCount == 1
+        ? 0
+        : (initialBallCount == 2
+            ? 1
+            : (initialBallCount == 3
+                ? 2
+                : (initialBallCount == 4 ? 3 : 4)));
     
-    _tabController = TabController(length: 4, vsync: this, initialIndex: initialIndex);
+    _tabController = TabController(length: 5, vsync: this, initialIndex: initialIndex);
     _tabController.addListener(_handleTabSelection);
   }
 
   void _handleTabSelection() {
     if (_tabController.indexIsChanging) return;
-    final counts = [2, 3, 4, 5];
+    final counts = [1, 2, 3, 4, 5]; // 1 = Center Shot (CS)
     final selectedCount = counts[_tabController.index];
     if (ref.read(ballCountProvider) != selectedCount) {
       ref.read(ballCountProvider.notifier).state = selectedCount;
@@ -51,7 +57,13 @@ class _RecordScreenState extends ConsumerState<RecordScreen> with SingleTickerPr
   Widget build(BuildContext context) {
     // Providerの値が変更されたらTabControllerを同期（リスナーを使用）
     ref.listen<int>(ballCountProvider, (previous, next) {
-      final targetIndex = next == 2 ? 0 : (next == 3 ? 1 : (next == 4 ? 2 : 3));
+      final targetIndex = next == 1
+          ? 0
+          : (next == 2
+              ? 1
+              : (next == 3
+                  ? 2
+                  : (next == 4 ? 3 : 4)));
       if (_tabController.index != targetIndex) {
         _tabController.animateTo(targetIndex);
       }
@@ -76,6 +88,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> with SingleTickerPr
           unselectedLabelColor: AppColors.textDim,
           indicatorSize: TabBarIndicatorSize.label,
           tabs: [
+            const Tab(text: 'CS'),
             Tab(text: '2 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '3 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
             Tab(text: '4 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),

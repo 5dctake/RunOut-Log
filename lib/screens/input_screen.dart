@@ -8,8 +8,6 @@ import 'package:runout_log/utils/constants.dart';
 import 'package:runout_log/utils/l10n.dart';
 import 'package:runout_log/widgets/hud_components.dart';
 import 'package:runout_log/widgets/tutorial_overlay.dart';
-import 'package:runout_log/services/ad_service.dart';
-import 'package:runout_log/services/purchase_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class InputScreen extends ConsumerStatefulWidget {
@@ -19,18 +17,15 @@ class InputScreen extends ConsumerStatefulWidget {
   ConsumerState<InputScreen> createState() => _InputScreenState();
 }
 
-class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProviderStateMixin {
+class _InputScreenState extends ConsumerState<InputScreen> {
   DateTime _selectedDate = DateTime.now();
   final List<bool?> _results = List.generate(10, (_) => null);
-  late TabController _tabController;
   bool _showTutorial = false;
   int _tutorialStep = 0;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this, initialIndex: 3);
-    _tabController.addListener(_handleTabSelection);
     _checkTutorial();
   }
 
@@ -58,15 +53,8 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
     }
   }
 
-  void _handleTabSelection() {
-    if (_tabController.indexIsChanging) return;
-    final counts = [2, 3, 4, 5];
-    ref.read(ballCountProvider.notifier).state = counts[_tabController.index];
-  }
-
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -130,19 +118,7 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
     );
 
     await ref.read(recordsProvider.notifier).addRecord(record);
-
-    final isAdFree = ref.read(adFreeProvider);
-    if (!isAdFree) {
-      // Add a small delay to ensure dialog dismissal and route stability
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (!mounted) return;
-      
-      AdService().showInterstitialAd(onDismiss: () {
-        _onSaveComplete();
-      });
-    } else {
-      _onSaveComplete();
-    }
+    _onSaveComplete();
   }
 
   void _onSaveComplete() {
@@ -158,15 +134,8 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    // Providerの値が変更されたらTabControllerを同期（ビルド中ではなくリスナーで実行）
-    ref.listen<int>(ballCountProvider, (previous, next) {
-      final targetIndex = next == 2 ? 0 : (next == 3 ? 1 : (next == 4 ? 2 : 3));
-      if (_tabController.index != targetIndex) {
-        _tabController.animateTo(targetIndex);
-      }
-    });
-
     final ballCount = ref.watch(ballCountProvider);
+    final isJp = ref.watch(languageProvider) == Language.jp;
 
     return Stack(
       children: [
@@ -174,25 +143,15 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text(L10n.s(ref, 'input_title')),
-            bottom: TabBar(
-              controller: _tabController,
-              indicatorColor: AppColors.primary,
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textDim,
-              indicatorSize: TabBarIndicatorSize.label,
-              tabs: [
-                Tab(text: '2 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
-                Tab(text: '3 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
-                Tab(text: '4 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
-                Tab(text: '5 ${L10n.s(ref, 'mode') == '種目' ? '球' : 'Balls'}'),
-              ],
-            ),
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // ── 取り切り球数セレクター ──────────────────────────
+                _buildBallCountSelector(ballCount, isJp),
+                const SizedBox(height: 20),
                 _buildDateSelector(),
                 const SizedBox(height: 24),
                 CleanCard(
@@ -207,7 +166,9 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
                         style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
-                        'Target Mode: $ballCount Balls',
+                        ballCount == 1
+                            ? (isJp ? 'センターショット' : 'Center Shot')
+                            : (isJp ? '$ballCount球 モード' : '$ballCount-Ball Mode'),
                         style: const TextStyle(color: AppColors.textDim, fontSize: 12),
                       ),
                     ],
@@ -266,7 +227,7 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
                 ),
                 const SizedBox(height: 32),
                 AppButton(
-                  label: ref.watch(adFreeProvider) ? L10n.s(ref, 'save') : L10n.s(ref, 'save_with_ad'),
+                  label: L10n.s(ref, 'save'),
                   onPressed: _save,
                 ),
                 const SizedBox(height: 12),
@@ -289,6 +250,121 @@ class _InputScreenState extends ConsumerState<InputScreen> with SingleTickerProv
             onNext: _dismissTutorial,
           ),
       ],
+    );
+  }
+
+  /// 球数変更ハンドラ：入力中の場合は確認ダイアログを表示する
+  Future<void> _onBallCountChanged(int newCount) async {
+    final hasInput = _results.any((r) => r != null);
+    if (hasInput) {
+      final isJp = ref.read(languageProvider) == Language.jp;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(
+            isJp ? '種目・球数を変更しますか？' : 'Change Mode / Ball Count?',
+            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            isJp
+                ? '入力中のデータはリセットされます。'
+                : 'Your current input will be cleared.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                isJp ? 'キャンセル' : 'Cancel',
+                style: const TextStyle(color: AppColors.textDim),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(
+                isJp ? '変更する' : 'Change',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      setState(() => _results.fillRange(0, 10, null));
+    }
+    ref.read(ballCountProvider.notifier).state = newCount;
+    HapticFeedback.selectionClick();
+  }
+
+  Widget _buildBallCountSelector(int ballCount, bool isJp) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppColors.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.sports_baseball, color: AppColors.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                isJp ? '練習種目 / 球数' : 'MODE / BALL COUNT',
+                style: const TextStyle(
+                  color: AppColors.textDim,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SegmentedButton<int>(
+            segments: [1, 2, 3, 4, 5].map((count) {
+              return ButtonSegment<int>(
+                value: count,
+                label: Text(
+                  count == 1 ? 'CS' : (isJp ? '$count球' : '${count}B'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              );
+            }).toList(),
+            selected: {ballCount},
+            onSelectionChanged: (newSelection) {
+              _onBallCountChanged(newSelection.first);
+            },
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppColors.primary;
+                }
+                return AppColors.background;
+              }),
+              foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AppColors.white;
+                }
+                return AppColors.textDim;
+              }),
+              side: WidgetStateProperty.all(
+                const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+              shape: WidgetStateProperty.all(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            showSelectedIcon: false,
+          ),
+        ],
+      ),
     );
   }
 

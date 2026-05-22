@@ -6,7 +6,6 @@ import 'package:runout_log/models/practice_record.dart';
 import 'package:runout_log/screens/home_screen.dart';
 import 'package:runout_log/screens/onboarding_screen.dart';
 import 'package:runout_log/utils/constants.dart';
-import 'package:runout_log/services/ad_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -53,14 +52,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         await Hive.openBox<PracticeRecord>('practice_records');
       }
       debugPrint('SplashScreen: Hive ready');
-
-      // 2. 広告サービスの初期化（並行して行い、タイムアウト付き）
-      // addPostFrameCallbackで呼び出すことで、最初のフレーム描画を優先する
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        AdService().init().catchError((e) {
-          debugPrint('SplashScreen: AdService init error: $e');
-        });
-      });
 
       setState(() {
         _isInitialized = true;

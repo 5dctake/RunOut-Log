@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runout_log/providers/records_provider.dart';
-import 'package:runout_log/services/purchase_service.dart';
 import 'package:runout_log/utils/constants.dart';
 import 'package:runout_log/utils/l10n.dart';
 import 'package:runout_log/widgets/hud_components.dart';
@@ -49,78 +48,12 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             CleanCard(
-              title: 'Premium',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.star_rounded, color: Colors.orangeAccent, size: 28),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              L10n.s(ref, 'remove_ads'),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              L10n.s(ref, 'remove_ads_desc'),
-                              style: const TextStyle(color: AppColors.textDim, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  if (ref.watch(adFreeProvider))
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          L10n.s(ref, 'purchased'),
-                          style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    )
-                  else
-                    Column(
-                      children: [
-                        AppButton(
-                          label: L10n.s(ref, 'remove_ads'),
-                          onPressed: () async {
-                            await ref.read(purchaseServiceProvider).buyAdFree();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Purchase successful!')),
-                              );
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: () => ref.read(purchaseServiceProvider).restorePurchase(),
-                          child: Text(L10n.s(ref, 'restore_purchase')),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            CleanCard(
               title: 'アプリ情報',
               child: Column(
                 children: [
-                  _buildInfoRow(Icons.info_outline, 'VERSION', '1.1.0 (Ad-Supported)'),
+                  _buildInfoRow(Icons.info_outline, 'VERSION', '1.2.0'),
                   const Divider(height: 32),
-                  _buildInfoRow(Icons.verified_user_outlined, 'STATUS', 'BETA / TEST ADS'),
+                  _buildInfoRow(Icons.verified_user_outlined, 'STATUS', 'FREE'),
                 ],
               ),
             ),

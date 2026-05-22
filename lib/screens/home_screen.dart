@@ -4,7 +4,6 @@ import 'package:runout_log/screens/input_screen.dart';
 import 'package:runout_log/screens/record_screen.dart';
 import 'package:runout_log/screens/graph_screen.dart';
 import 'package:runout_log/screens/settings_screen.dart';
-import 'package:runout_log/widgets/banner_ad_widget.dart';
 import 'package:runout_log/utils/constants.dart';
 import 'package:runout_log/utils/l10n.dart';
 
@@ -32,22 +31,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         child: _screens[_selectedIndex],
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const BannerAdWidget(),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -4),
-                ),
-              ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -4),
             ),
-            child: BottomNavigationBar(
+          ],
+        ),
+        child: BottomNavigationBar(
               currentIndex: _selectedIndex,
               onTap: (index) => setState(() => _selectedIndex = index),
               backgroundColor: AppColors.surface,
@@ -105,8 +100,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-        ],
-      ),
     );
   }
 }
