@@ -59,3 +59,9 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Google Play Billing Library を v8+ に強制（Google Play ポリシー 2026年8月31日対応）
+    // アプリは課金機能を使用していないが、Google Play のスキャン要件を満たすために追加
+    implementation("com.android.billingclient:billing:9.1.0")
+}
